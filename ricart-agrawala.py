@@ -3,7 +3,6 @@ import rpyc
 import sys
 from rpyc.utils.server import ThreadedServer
 from threading import Thread
-
 from process import Process
 from state import STATE
 
@@ -37,7 +36,7 @@ class RA(rpyc.Service):
             self.is_accessible = False
         elif all(p.state is STATE.WANTED for p in processes):
             self.is_accessible = True
-
+    
     def get_wanted_processes(self):
         for process in processes:
             if process.state == STATE.WANTED and process not in wanted_processes:
@@ -58,6 +57,32 @@ class RA(rpyc.Service):
 def run_server(server):
     server.start()
 
+def list_processes():
+    for process in processes:
+        print(f"Process {process.id}, state {process.state.value}")
+
+
+def set_time_out(processing_time_out):
+    for process in processes:
+        process.set_time_out(processing_time_out)
+
+    p_queue = queue.Queue()
+    while not processees_queue.empty():
+        process = processees_queue.get()
+        process.set_time_out(processing_time_out)
+        p_queue.put(process)
+
+
+def set_cs_timeout(cs_timeout):
+    for process in processes:
+        process.set_cs_time_out(cs_timeout)
+
+    p_queue = queue.Queue()
+    while not processees_queue.empty():
+        process = processees_queue.get()
+        process.set_cs_time_out(cs_timeout)
+        p_queue.put(process)
+
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
@@ -72,3 +97,17 @@ if __name__ == "__main__":
     ts = ThreadedServer(RA(number_of_processes), port=23456)
     server_thread = Thread(target=run_server, args=(ts,), daemon=True)
     server_thread.start()
+
+    while True:
+        command = input("Input the command: ")
+        if command == "list":
+            list_processes()
+        elif "time-p" in command:
+            processing_time_out = int(command.split(" ")[1])
+            set_time_out(processing_time_out)
+        elif "time-cs" in command:
+            cs_time_out = int(command.split(" ")[1])
+            set_cs_timeout(cs_time_out)
+        elif command == "exit":
+            print("Program exited")
+            break
