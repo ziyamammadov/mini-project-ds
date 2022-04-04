@@ -1,6 +1,6 @@
 from datetime import datetime
 import rpyc
-import time
+from time import sleep
 from random import randint
 from threading import Thread
 
@@ -30,14 +30,14 @@ class Process(Thread):
     def run(self):
         while True:
             if self.state == STATE.DO_NOT_WANT:
-                time.sleep(self.process_time_out)
+                sleep(self.process_time_out)
                 self.set_state(STATE.WANTED)
                 self.send_message()
             if self.state == STATE.WANTED:
-                time.sleep(self.process_time_out)
+                sleep(self.process_time_out)
                 self.send_message()
             elif self.state == STATE.HELD:
-                time.sleep(self.cs_time_out)
+                sleep(self.cs_time_out)
                 self.set_state(STATE.DO_NOT_WANT)
                 self.set_is_accessible(True)
                 self.data = None

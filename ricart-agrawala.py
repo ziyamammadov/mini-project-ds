@@ -62,7 +62,7 @@ def run_server(server):
 
 def list_processes():
     for process in processes:
-        print(f"Process {process.id}, state {process.state.value}")
+        print(f"Process {process.id}, state {process.state.value}, time-out {process.process_time_out}")
 
 
 def set_time_out(processing_time_out):
