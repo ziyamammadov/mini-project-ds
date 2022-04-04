@@ -1,0 +1,1 @@
+python3 ricart-agrawala.py $1
