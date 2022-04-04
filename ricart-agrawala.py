@@ -3,12 +3,14 @@ import rpyc
 import sys
 from rpyc.utils.server import ThreadedServer
 from threading import Thread
+
 from process import Process
 from state import STATE
 
 processes = []
 processees_queue = queue.Queue()
 wanted_processes = []
+supported_commands = ["list", "time-p", "time-cs", "exit"]
 shared_resource = "The data that can be accessed only by one process at one time"
 
 
@@ -36,7 +38,7 @@ class RA(rpyc.Service):
             self.is_accessible = False
         elif all(p.state is STATE.WANTED for p in processes):
             self.is_accessible = True
-    
+
     def get_wanted_processes(self):
         for process in processes:
             if process.state == STATE.WANTED and process not in wanted_processes:
@@ -57,12 +59,14 @@ class RA(rpyc.Service):
 def run_server(server):
     server.start()
 
+
 def list_processes():
     for process in processes:
         print(f"Process {process.id}, state {process.state.value}")
 
 
 def set_time_out(processing_time_out):
+    print(f"Setting the time-out of {processing_time_out} to the processes")
     for process in processes:
         process.set_time_out(processing_time_out)
 
@@ -74,6 +78,7 @@ def set_time_out(processing_time_out):
 
 
 def set_cs_timeout(cs_timeout):
+    print(f"Setting the time-out of {cs_timeout} to the critical session")
     for process in processes:
         process.set_cs_time_out(cs_timeout)
 
@@ -103,11 +108,25 @@ if __name__ == "__main__":
         if command == "list":
             list_processes()
         elif "time-p" in command:
-            processing_time_out = int(command.split(" ")[1])
-            set_time_out(processing_time_out)
+            try:
+                processing_time_out = int(command.split(" ")[1])
+                if processing_time_out <= 5:
+                    print("The value should be more than 5")
+                else:
+                    set_time_out(processing_time_out)
+            except:
+                print("Argument should be numeric. For example <time-p 10>")
         elif "time-cs" in command:
-            cs_time_out = int(command.split(" ")[1])
-            set_cs_timeout(cs_time_out)
+            try:
+                cs_time_out = int(command.split(" ")[1])
+                if cs_time_out <= 10:
+                    print("The value should be more than 10")
+                else:
+                    set_cs_timeout(cs_time_out)
+            except:
+                print("Argument should be numeric. For example <time-cs 20>")
         elif command == "exit":
             print("Program exited")
             break
+        else:
+            print(f"Not supported command. Please use following commands {supported_commands}")
